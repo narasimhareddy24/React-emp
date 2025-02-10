@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function App() {
   const [values, setValues] = useState({
@@ -8,22 +8,64 @@ function App() {
     gender: "",
     dob: "",
     email: "",
-    phone: ""
-
+    phone: "",
   });
 
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const storedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
+    setEmployees(storedEmployees);
+  }, []);
+
   const handleChanges = (e) => {
-    console.log(e,"inhandle change function")
     setValues({
       ...values,
-      [e.target.name]: e.target.value, // ✅ Fix: Corrected name and value assignment
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = (e) => {
-
     e.preventDefault();
-    console.log(values);
+
+    // Name validation
+    if (!/^[A-Za-z\s]+$/.test(values.name)) {
+      alert("Name should only contain alphabets.");
+      return;
+    }
+
+    // Date of Birth validation
+    const today = new Date().toISOString().split("T")[0];
+    if (values.dob >= today) {
+      alert("Date of Birth cannot be today or in the future.");
+      return;
+    }
+
+   
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(values.email)) {
+      alert("Enter a valid email (e.g., example123@gmail.com).");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(values.phone)) {
+      alert("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    const updatedEmployees = [...employees, values];
+
+    localStorage.setItem("employees", JSON.stringify(updatedEmployees));
+
+    setEmployees(updatedEmployees);
+
+    setValues({
+      name: "",
+      age: "",
+      gender: "",
+      dob: "",
+      email: "",
+      phone: "",
+    });
   };
 
   return (
@@ -35,7 +77,7 @@ function App() {
           type="text"
           id="name"
           name="name"
-          value={values.name} 
+          value={values.name}
           onChange={handleChanges}
           required
         />
@@ -47,7 +89,7 @@ function App() {
           name="age"
           min="1"
           max="100"
-          value={values.age} // ✅ Fix: Added value attribute
+          value={values.age}
           onChange={handleChanges}
           required
         />
@@ -59,9 +101,9 @@ function App() {
               type="radio"
               name="gender"
               value="male"
-              checked={values.gender === "male"} // ✅ Fix: Added checked attribute
+              checked={values.gender === "male"}
               onChange={handleChanges}
-            />{" "}
+            />
             Male
           </label>
           <label>
@@ -69,9 +111,9 @@ function App() {
               type="radio"
               name="gender"
               value="female"
-              checked={values.gender === "female"} // ✅ Fix: Added checked attribute
+              checked={values.gender === "female"}
               onChange={handleChanges}
-            />{" "}
+            />
             Female
           </label>
           <label>
@@ -79,9 +121,9 @@ function App() {
               type="radio"
               name="gender"
               value="other"
-              checked={values.gender === "other"} // ✅ Fix: Added checked attribute
+              checked={values.gender === "other"}
               onChange={handleChanges}
-            />{" "}
+            />
             Other
           </label>
         </div>
@@ -91,8 +133,9 @@ function App() {
           type="date"
           id="dob"
           name="dob"
-          value={values.dob} // ✅ Fix: Added value attribute
+          value={values.dob}
           onChange={handleChanges}
+          max={new Date().toISOString().split("T")[0]} // Restricts future dates
           required
         />
 
@@ -101,7 +144,7 @@ function App() {
           type="email"
           id="email"
           name="email"
-          value={values.email} // ✅ Fix: Added value attribute
+          value={values.email}
           onChange={handleChanges}
           required
         />
@@ -111,8 +154,7 @@ function App() {
           type="tel"
           id="phone"
           name="phone"
-          pattern="\d{10}"
-          value={values.phone} // ✅ Fix: Added value attribute
+          value={values.phone}
           onChange={handleChanges}
           required
         />
@@ -121,6 +163,36 @@ function App() {
           <button type="submit">Submit</button>
         </div>
       </form>
+
+      <h2>Employee List</h2>
+      {employees.length > 0 ? (
+        <table border="0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Gender</th>
+              <th>Date of Birth</th>
+              <th>Email</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map((employee, index) => (
+              <tr key={index}>
+                <td>{employee.name}</td>
+                <td>{employee.age}</td>
+                <td>{employee.gender}</td>
+                <td>{employee.dob}</td>
+                <td>{employee.email}</td>
+                <td>{employee.phone}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No employees added yet.</p>
+      )}
     </div>
   );
 }
